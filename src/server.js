@@ -1,5 +1,10 @@
 'use strict';
 const Hapi = require('hapi');
+const Inert = require('inert');
+const Vision = require('vision');
+const HapiSwagger = require('hapi-swagger');
+
+const PetRoute = require('./routes/pets');
 
 const server = new Hapi.Server();
 server.connection({
@@ -7,17 +12,27 @@ server.connection({
     port: 8000
 });
 
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: (request, reply) => {
-        return reply('hello world');
+const options = {
+    info: {
+        'title': 'Pet API Documentation',
+        'version': "1",
     }
+};
+
+server.register([
+    Inert,
+    Vision,
+    {
+        'register': HapiSwagger,
+        'options': options
+    }], (err) => {
+    server.start((err) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('Server started at ', server.info.uri);
+        }
+    });
 });
 
-server.start((err) => {
-    if (err) {
-        throw err;
-    }
-    console.log('Server started at ', server.info.uri);
-});
+server.route(PetRoute);
